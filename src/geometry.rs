@@ -47,8 +47,3 @@ pub fn is_rect_cross_circle(rect: [Point;2], circle:Circle)->bool{
 
     return [p1, p2, p3, p4].iter().any(|&p| is_point_in_circle(p, circle));
 }
-
-// #[no_mangle]
-// pub extern "C" fn hello(){
-//     println!("hello");
-// }
