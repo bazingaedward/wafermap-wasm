@@ -4,9 +4,9 @@ version = "0.1.0"
 authors = ["kaixiang.qiu <kaixiang.qiu@guwave.com>"]
 edition = "2018"
 
-[lib]
-name = "wafermap"
-crate-type = ["cdylib"]
+# [lib]
+# name = "wafermap"
+# crate-type = ["cdylib"]
 
 [features]
 
