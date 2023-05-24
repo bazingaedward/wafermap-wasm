@@ -1,4 +1,3 @@
-// mod crate::geometry;
 use crate::geometry::Point;
 
 #[derive(Copy, Clone, Debug)]
@@ -34,15 +33,15 @@ pub enum YAxisDirection {
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct OriginalConf {
     pub notch: NotchDirection,
-    pub posX: XAxisDirection,
-    pub posY: YAxisDirection,
+    pub pos_x: XAxisDirection,
+    pub pos_y: YAxisDirection,
 }
 
 #[derive(Debug)]
 pub struct StandardOptions {
     notch: NotchDirection,
-    posX: XAxisDirection,
-    posY: YAxisDirection,
+    pos_x: XAxisDirection,
+    pos_y: YAxisDirection,
     canvasAxisX: XAxisDirection,
     canvasAxisY: YAxisDirection,
     centerDieX: i32,
@@ -53,8 +52,8 @@ pub struct StandardOptions {
 
 pub const STANDARD_OPTIONS: StandardOptions = StandardOptions {
     notch: NotchDirection::Down,
-    posX: XAxisDirection::Right,
-    posY: YAxisDirection::Up,
+    pos_x: XAxisDirection::Right,
+    pos_y: YAxisDirection::Up,
     canvasAxisX: XAxisDirection::Right,
     canvasAxisY: YAxisDirection::Down,
     centerDieX: 0,
@@ -92,6 +91,14 @@ pub fn translate_points(points: Vec<Point>, from: Point, to: Point) -> Vec<Point
     return points;
 }
 
+#[test]
+fn test_translate_points() {
+    let points: Vec<_> = vec![Point { x: 10.0, y: 20.0 }];
+    let results = translate_points(points, Point { x: 0.0, y: 0.0 }, Point { x: 1.0, y: 1.0 });
+    assert_eq!(results[0].x, 11.0);
+    assert_eq!(results[0].y, 21.0);
+}
+
 /**
  * 坐标旋转
  * 基于原点 x=0,y=0 旋转
@@ -99,8 +106,8 @@ pub fn translate_points(points: Vec<Point>, from: Point, to: Point) -> Vec<Point
  * @param {Point[]} points 坐标列表
  * @param {{
  *     notch: NotchDirection;
- *     posX: XAxisDirection;
- *     posY: YAxisDirection;
+ *     pos_x: XAxisDirection;
+ *     pos_y: YAxisDirection;
  *   }} originalConf 原始 notch
  * @param {NotchDirection} targetNotch 目标 notch
  * @param {Boolean} round 是否对坐标四舍五入
@@ -110,7 +117,7 @@ pub fn translate_points(points: Vec<Point>, from: Point, to: Point) -> Vec<Point
  * const points = [
  *   { x: 10, y: 20 },
  * ];
- * rotatePointsByNotch(points, {notch: 'right', posX: 'right', posY: 'up'}, 'down'); // 输出： [{ x: 20, y: -10 }]
+ * rotatePointsByNotch(points, {notch: 'right', pos_x: 'right', pos_y: 'up'}, 'down'); // 输出： [{ x: 20, y: -10 }]
  */
 pub fn rotate_points_by_notch(
     points: Vec<Point>,
@@ -118,12 +125,14 @@ pub fn rotate_points_by_notch(
     target_notch: NotchDirection,
     round: bool,
 ) -> Vec<Point> {
-
     let radian = notch_to_radian(original_conf, target_notch);
     if radian == 0.0 {
         return points;
     }
-    println!("{:?}, {:?}, {:?}", original_conf.notch,target_notch ,radian);
+    println!(
+        "{:?}, {:?}, {:?}",
+        original_conf.notch, target_notch, radian
+    );
 
     let mut points: Vec<Point> = points;
     for p in points.iter_mut() {
@@ -143,37 +152,55 @@ pub fn rotate_points_by_notch(
         }
     }
 
-    return points
+    return points;
 }
+
+#[test]
+fn test_rotate_points_by_notch(){
+    let origin = OriginalConf{
+        notch: NotchDirection::Right,
+        pos_x: XAxisDirection::Right,
+        pos_y: YAxisDirection::Up,
+    };
+    let points = vec![Point{x: 10.0, y: 20.0}];
+    let results = rotate_points_by_notch(points, origin, NotchDirection::Down, true);
+    assert_eq!(results[0].x, 20.0);
+    assert_eq!(results[0].y, -10.0);
+}
+    
 
 /**
  * 基于notch方向计算旋转角度
  */
-pub fn notch_to_radian(original_conf: OriginalConf, target_notch: NotchDirection)->f32{
+pub fn notch_to_radian(original_conf: OriginalConf, target_notch: NotchDirection) -> f32 {
     if original_conf.notch == target_notch {
         return 0.0;
     }
 
-    let is_same_x = original_conf.posX == STANDARD_OPTIONS.posX;
-    let is_same_y = original_conf.posY == STANDARD_OPTIONS.posY;
-    let rotate_direction = if is_same_x ^ is_same_y {-1.0} else {1.0};
-    
-    let OriginalConf{ notch, posX, posY } = original_conf;
+    let is_same_x = original_conf.pos_x == STANDARD_OPTIONS.pos_x;
+    let is_same_y = original_conf.pos_y == STANDARD_OPTIONS.pos_y;
+    let rotate_direction = if is_same_x ^ is_same_y { -1.0 } else { 1.0 };
+
+    let OriginalConf {
+        notch,
+        pos_x,
+        pos_y,
+    } = original_conf;
 
     // 对称方向 180
     match (notch, target_notch) {
         (NotchDirection::Left, NotchDirection::Right) => {
             return std::f64::consts::PI as f32 * rotate_direction;
-        },
+        }
         (NotchDirection::Right, NotchDirection::Left) => {
             return std::f64::consts::PI as f32 * rotate_direction;
-        },
+        }
         (NotchDirection::Up, NotchDirection::Down) => {
             return std::f64::consts::PI as f32 * rotate_direction;
-        },
+        }
         (NotchDirection::Down, NotchDirection::Up) => {
             return std::f64::consts::PI as f32 * rotate_direction;
-        },
+        }
         _ => {}
     }
 
@@ -181,23 +208,33 @@ pub fn notch_to_radian(original_conf: OriginalConf, target_notch: NotchDirection
     match (notch, target_notch) {
         (NotchDirection::Left, NotchDirection::Up) => {
             return (std::f64::consts::PI / 2.0) as f32 * rotate_direction;
-        },
+        }
         (NotchDirection::Up, NotchDirection::Right) => {
             return (std::f64::consts::PI / 2.0) as f32 * rotate_direction;
-        },
+        }
         (NotchDirection::Right, NotchDirection::Down) => {
             println!("right down, {}", std::f64::consts::PI / 2.0);
             return (std::f64::consts::PI / 2.0) as f32 * rotate_direction;
-        },
+        }
         (NotchDirection::Down, NotchDirection::Left) => {
             return (std::f64::consts::PI / 2.0) as f32 * rotate_direction;
-        },
+        }
         _ => {}
     }
-    
+
     // 相邻逆时针方向 90
     return ((std::f64::consts::PI * 3.0) / 2.0) as f32 * rotate_direction;
+}
 
+#[test]
+fn test_notch_to_radian(){
+    let origin = OriginalConf{
+        notch: NotchDirection::Right,
+        pos_x: XAxisDirection::Right,
+        pos_y: YAxisDirection::Up,
+    };
+    let radian = notch_to_radian(origin, NotchDirection::Down, );
+    assert_eq!(radian, 1.5707964);
 }
 
 /**
@@ -222,7 +259,7 @@ pub fn convert_points_by_axis(
     y_axis_direction: YAxisDirection,
     target_x_axis_direction: XAxisDirection,
     target_y_axis_direction: YAxisDirection,
-)->Vec<Point>{
+) -> Vec<Point> {
     let is_same_x = x_axis_direction == target_x_axis_direction;
     let is_same_y = y_axis_direction == target_y_axis_direction;
 
@@ -237,7 +274,15 @@ pub fn convert_points_by_axis(
             p.y = -y;
         }
     }
-    return points
+    return points;
+}
+
+#[test]
+fn test_convert_points_by_axis(){
+    let points = vec![Point{x: 10.0, y: 20.0}];
+    let results = convert_points_by_axis(points, XAxisDirection::Right, YAxisDirection::Down, XAxisDirection::Left, YAxisDirection::Up);
+    assert_eq!(results[0].x, -10.0);
+    assert_eq!(results[0].y, -20.0);
 }
 
 /**
@@ -247,8 +292,8 @@ pub fn convert_points_by_axis(
  * @param {number} column
  * @param {{
  *     notch: NotchDirection;
- *     posX: XAxisDirection;
- *     posY: YAxisDirection;
+ *     pos_x: XAxisDirection;
+ *     pos_y: YAxisDirection;
  *   }} originalConf
  * @param {NotchDirection} targetNotch
  * @return {*}  {{
@@ -257,14 +302,14 @@ pub fn convert_points_by_axis(
  * }}
  *
  * 示例:
- * rotateRowCol(1, 3, {notch: 'right', posX: 'right', posY: 'up'}, 'down'); // 输出：{row: 3, column: 1}
+ * rotateRowCol(1, 3, {notch: 'right', pos_x: 'right', pos_y: 'up'}, 'down'); // 输出：{row: 3, column: 1}
  */
 pub fn rotate_row_col(
     row: i32,
     column: i32,
     original_conf: OriginalConf,
     target_notch: NotchDirection,
-)->(i32, i32){
+) -> (i32, i32) {
     let radian = notch_to_radian(original_conf, target_notch);
     if radian == 0.0 {
         return (row, column);
@@ -277,6 +322,19 @@ pub fn rotate_row_col(
     return (new_row, new_column);
 }
 
+#[test]
+fn test_rotate_row_col(){
+    let origin: OriginalConf = OriginalConf {
+        notch: NotchDirection::Right,
+        pos_x: XAxisDirection::Right,
+        pos_y: YAxisDirection::Up,
+    };
+    let (row, col) = rotate_row_col(1, 3, origin, NotchDirection::Down);
+    assert_eq!(row, 3);
+    assert_eq!(col, 1);
+}
+
+
 /**
  * 根据Notch方向转换 width height
  *
@@ -284,8 +342,8 @@ pub fn rotate_row_col(
  * @param {number} height
  * @param {{
  *     notch: NotchDirection;
- *     posX: XAxisDirection;
- *     posY: YAxisDirection;
+ *     pos_x: XAxisDirection;
+ *     pos_y: YAxisDirection;
  *   }} originalConf
  * @param {NotchDirection} targetNotch
  * @return {*}  {{
@@ -294,18 +352,17 @@ pub fn rotate_row_col(
  * }}
  *
  * 示例:
- * rotateSize(2, 4, {notch: 'right', posX: 'right', posY: 'up'}, 'down'); // 输出：{width: 4, height: 2}
+ * rotateSize(2, 4, {notch: 'right', pos_x: 'right', pos_y: 'up'}, 'down'); // 输出：{width: 4, height: 2}
  */
 pub fn rotate_size(
     width: i32,
     height: i32,
     original_conf: OriginalConf,
     target_notch: NotchDirection,
-)->(i32, i32){
+) -> (i32, i32) {
     let (row, column) = rotate_row_col(height, width, original_conf, target_notch);
     return (column, row);
 }
-
 
 /**
  * 根据Notch方向转换 centerOffsetX centerOffsetY
@@ -314,8 +371,8 @@ pub fn rotate_size(
  * @param {number} centerOffsetY
  * @param {{
  *     notch: NotchDirection;
- *     posX: XAxisDirection;
- *     posY: YAxisDirection;
+ *     pos_x: XAxisDirection;
+ *     pos_y: YAxisDirection;
  *   }} originalConf
  * @param {NotchDirection} targetNotch
  * @return {*}  {{
@@ -324,15 +381,23 @@ pub fn rotate_size(
  * }}
  *
  * 示例:
- * rotateCenterOffset(2, 4, {notch: 'right', posX: 'right', posY: 'up'}, 'down'); // 输出：{centerOffsetX: 4, centerOffsetY: -2}
+ * rotateCenterOffset(2, 4, {notch: 'right', pos_x: 'right', pos_y: 'up'}, 'down'); // 输出：{centerOffsetX: 4, centerOffsetY: -2}
  */
 pub fn rotate_center_offset(
     center_offset_x: f64,
     center_offset_y: f64,
     original_conf: OriginalConf,
     target_notch: NotchDirection,
-)->(f32, f32){
-    let points = rotate_points_by_notch(vec![Point{x: center_offset_x, y: center_offset_y}], original_conf, target_notch, true);
+) -> (f32, f32) {
+    let points = rotate_points_by_notch(
+        vec![Point {
+            x: center_offset_x,
+            y: center_offset_y,
+        }],
+        original_conf,
+        target_notch,
+        true,
+    );
     return (points[0].x as f32, points[0].y as f32);
 }
 
@@ -345,8 +410,8 @@ pub fn rotate_center_offset(
  * @param {number} colOffset
  * @param {{
  *     notch: NotchDirection;
- *     posX: XAxisDirection;
- *     posY: YAxisDirection;
+ *     pos_x: XAxisDirection;
+ *     pos_y: YAxisDirection;
  *   }} originalConf
  * @param {NotchDirection} targetNotch
  * @return {*}  {{
@@ -355,16 +420,16 @@ pub fn rotate_center_offset(
  * }}
  *
  * 示例:
- * rotateRowColOffset(2, 2, 0, 1, {notch: 'right', posX: 'right', posY: 'up'}, 'down'); // 输出：{rowOffset: 1, colOffset: 1}
+ * rotateRowColOffset(2, 2, 0, 1, {notch: 'right', pos_x: 'right', pos_y: 'up'}, 'down'); // 输出：{rowOffset: 1, colOffset: 1}
  */
 pub fn rotate_row_col_offset(
     row: i32,
     column: i32,
-    row_offset: i32,
-    col_offset: i32,
+    row_offset: f64,
+    col_offset: f64,
     original_conf: OriginalConf,
     target_notch: NotchDirection,
-)->(f64, f64){
+) -> (f64, f64) {
     if original_conf.notch == target_notch {
         return (row_offset, col_offset);
     }
@@ -373,7 +438,10 @@ pub fn rotate_row_col_offset(
     let mut made_all_points: Vec<Point> = vec![];
     for x in 0..row {
         for y in 0..column {
-            made_all_points.push(Point{x: x as f64, y: y as f64});
+            made_all_points.push(Point {
+                x: x as f64,
+                y: y as f64,
+            });
         }
     }
 
@@ -381,7 +449,10 @@ pub fn rotate_row_col_offset(
     let rotated_points = rotate_points_by_notch(made_all_points, original_conf, target_notch, true);
 
     // 匹配 rowOffset, colOffset 旋转后的点
-    let matched_offset_point = rotated_points.iter().find(|&p| p.x == row_offset as f64 && p.y == col_offset as f64).unwrap();
+    let matched_offset_point = rotated_points
+        .iter()
+        .find(|&p| p.x == row_offset as f64 && p.y == col_offset as f64)
+        .unwrap();
 
     // 获取旋转后的最小坐标点
     let mut min_x = std::f64::MAX;
@@ -396,9 +467,11 @@ pub fn rotate_row_col_offset(
     }
 
     // 平移最小坐标点到 0，0 的向量距离
-    let translated_points = translate_points(vec![*matched_offset_point], Point { x: min_x, y: min_y }, Point { x: 0.0, y: 0.0 });
+    let translated_points = translate_points(
+        vec![*matched_offset_point],
+        Point { x: min_x, y: min_y },
+        Point { x: 0.0, y: 0.0 },
+    );
 
-    return (translated_points[0].x, translated_points[0].y)
-
-
+    return (translated_points[0].x, translated_points[0].y);
 }
