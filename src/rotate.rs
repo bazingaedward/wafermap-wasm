@@ -42,24 +42,24 @@ pub struct StandardOptions {
     notch: NotchDirection,
     pos_x: XAxisDirection,
     pos_y: YAxisDirection,
-    canvasAxisX: XAxisDirection,
-    canvasAxisY: YAxisDirection,
-    centerDieX: i32,
-    centerDieY: i32,
-    centerReticleX: i32,
-    centerReticleY: i32,
+    canvas_axis_x: XAxisDirection,
+    canvas_axis_y: YAxisDirection,
+    center_die_x: i32,
+    center_die_y: i32,
+    center_reticle_x: i32,
+    center_reticle_y: i32,
 }
 
 pub const STANDARD_OPTIONS: StandardOptions = StandardOptions {
     notch: NotchDirection::Down,
     pos_x: XAxisDirection::Right,
     pos_y: YAxisDirection::Up,
-    canvasAxisX: XAxisDirection::Right,
-    canvasAxisY: YAxisDirection::Down,
-    centerDieX: 0,
-    centerDieY: 0,
-    centerReticleX: 0,
-    centerReticleY: 0,
+    canvas_axis_x: XAxisDirection::Right,
+    canvas_axis_y: YAxisDirection::Down,
+    center_die_x: 0,
+    center_die_y: 0,
+    center_reticle_x: 0,
+    center_reticle_y: 0,
 };
 
 /**
